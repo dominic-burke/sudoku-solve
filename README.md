@@ -34,4 +34,3 @@ the checked-in sample in one command. Build artifacts are isolated under
 - `include/` — public solver API
 - `tests/` — unit and CLI tests
 - `examples/` — sample puzzle
-- `docs/` — project notes
