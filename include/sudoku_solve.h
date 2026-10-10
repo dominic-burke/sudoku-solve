@@ -9,7 +9,8 @@
 #define SUDOKU_CELL_COUNT (SUDOKU_SIZE * SUDOKU_SIZE)
 #define SUDOKU_STRING_SIZE (SUDOKU_CELL_COUNT + 1)
 
-typedef struct Board {
+typedef struct Board
+{
     unsigned short square[SUDOKU_CELL_COUNT];
 } Board;
 
