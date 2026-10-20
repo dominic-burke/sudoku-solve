@@ -53,6 +53,11 @@ static int test_gui_workflow(void)
     CHECK(g_application_register(G_APPLICATION(application), NULL, &error));
     CHECK(error == NULL);
     activate(application, &state);
+    CHECK(import_contents(&state, sample_puzzle, strlen(sample_puzzle)));
+    CHECK(strcmp(gtk_label_get_text(GTK_LABEL(state.status)), "Puzzle imported") == 0);
+    gtk_editable_set_text(GTK_EDITABLE(state.entries[0]), "9");
+    CHECK(!import_contents(&state, "invalid", strlen("invalid")));
+    CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(state.entries[0])), "9") == 0);
     enter_puzzle(&state, sample_puzzle);
 
     g_signal_emit_by_name(state.solve_button, "clicked");

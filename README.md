@@ -33,6 +33,9 @@ sudo apt install build-essential pkg-config libgtk-4-dev
 ```
 
 The default `make` target does not require GTK and continues to build the CLI.
+The GUI's **Import** button accepts puzzle files containing 81 digits, with
+`0` or `.` for empty cells; whitespace and line breaks are ignored. Imported
+puzzles are validated before they replace the current grid.
 
 ## Tests
 

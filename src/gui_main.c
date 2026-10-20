@@ -9,6 +9,7 @@ typedef struct AppState
     GtkWidget *status;
     GtkWidget *solve_button;
     GtkWidget *clear_button;
+    GtkWidget *window;
 } AppState;
 
 static void set_status(AppState *state, const char *message, gboolean error)
@@ -60,6 +61,71 @@ static void set_board(AppState *state, const Board *board)
     }
 }
 
+static gboolean import_contents(AppState *state, const char *contents, size_t length)
+{
+    char *input = g_strndup(contents, length);
+    Board board;
+    char error[128];
+    const gboolean parsed = board_parse(input, &board, error, sizeof(error));
+    g_free(input);
+
+    if (!parsed)
+    {
+        set_status(state, error, TRUE);
+        return FALSE;
+    }
+    if (!board_is_valid(&board))
+    {
+        set_status(state, "The imported puzzle contains duplicate digits", TRUE);
+        return FALSE;
+    }
+
+    set_board(state, &board);
+    set_status(state, "Puzzle imported", FALSE);
+    return TRUE;
+}
+
+static void import_file_finished(GObject *source_object, GAsyncResult *result,
+                                 gpointer user_data)
+{
+    AppState *state = user_data;
+    GError *error = NULL;
+    GFile *file = gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source_object), result, &error);
+    if (file == NULL)
+    {
+        if (!g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED))
+        {
+            set_status(state, error->message, TRUE);
+        }
+        g_clear_error(&error);
+        return;
+    }
+
+    char *contents = NULL;
+    gsize length = 0;
+    if (!g_file_load_contents(file, NULL, &contents, &length, NULL, &error))
+    {
+        set_status(state, error->message, TRUE);
+        g_clear_error(&error);
+        g_object_unref(file);
+        return;
+    }
+
+    (void)import_contents(state, contents, length);
+    g_free(contents);
+    g_object_unref(file);
+}
+
+static void import_clicked(GtkButton *button, gpointer user_data)
+{
+    (void)button;
+    AppState *state = user_data;
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    gtk_file_dialog_set_title(dialog, "Import Sudoku Puzzle");
+    gtk_file_dialog_open(dialog, GTK_WINDOW(state->window), NULL, import_file_finished, state);
+    g_object_unref(dialog);
+}
+
 static void solve_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
@@ -98,9 +164,11 @@ static void activate(GtkApplication *application, gpointer user_data)
     GtkWidget *outer_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     GtkWidget *grid = gtk_grid_new();
     GtkWidget *button_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *import_button = gtk_button_new_with_label("Import");
     state->solve_button = gtk_button_new_with_label("Solve");
     state->clear_button = gtk_button_new_with_label("Clear");
     state->status = gtk_label_new("Enter a puzzle to solve");
+    state->window = window;
 
     gtk_window_set_title(GTK_WINDOW(window), "Sudoku Solver");
     gtk_window_set_default_size(GTK_WINDOW(window), 420, 500);
@@ -136,6 +204,7 @@ static void activate(GtkApplication *application, gpointer user_data)
     }
 
     gtk_widget_add_css_class(state->solve_button, "suggested-action");
+    gtk_box_append(GTK_BOX(button_box), import_button);
     gtk_box_append(GTK_BOX(button_box), state->solve_button);
     gtk_box_append(GTK_BOX(button_box), state->clear_button);
     gtk_box_append(GTK_BOX(outer_box), grid);
@@ -145,6 +214,7 @@ static void activate(GtkApplication *application, gpointer user_data)
 
     g_signal_connect(state->solve_button, "clicked", G_CALLBACK(solve_clicked), state);
     g_signal_connect(state->clear_button, "clicked", G_CALLBACK(clear_clicked), state);
+    g_signal_connect(import_button, "clicked", G_CALLBACK(import_clicked), state);
     gtk_window_present(GTK_WINDOW(window));
 }
 
