@@ -1,5 +1,4 @@
-#define SUDOKU_GUI_NO_MAIN
-#include "../src/gui_main.c"
+#include "../src/gui.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -52,13 +51,17 @@ static int test_gui_workflow(void)
     GError *error = NULL;
     CHECK(g_application_register(G_APPLICATION(application), NULL, &error));
     CHECK(error == NULL);
-    activate(application, &state);
-    CHECK(import_contents(&state, sample_puzzle, strlen(sample_puzzle)));
+    gui_activate(application, &state);
+    CHECK(gui_import_contents(&state, sample_puzzle, strlen(sample_puzzle)));
     CHECK(strcmp(gtk_label_get_text(GTK_LABEL(state.status)), "Puzzle imported") == 0);
     gtk_editable_set_text(GTK_EDITABLE(state.entries[0]), "9");
-    CHECK(!import_contents(&state, "invalid", strlen("invalid")));
+    CHECK(!gui_import_contents(&state, "invalid", strlen("invalid")));
     CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(state.entries[0])), "9") == 0);
     enter_puzzle(&state, sample_puzzle);
+    char exported[SUDOKU_STRING_SIZE];
+    char export_error[128];
+    CHECK(gui_export_contents(&state, exported, export_error, sizeof(export_error)));
+    CHECK(strcmp(exported, sample_puzzle) == 0);
 
     g_signal_emit_by_name(state.solve_button, "clicked");
     CHECK(strcmp(gtk_label_get_text(GTK_LABEL(state.status)), "Puzzle solved") == 0);
@@ -74,6 +77,8 @@ static int test_gui_workflow(void)
     {
         CHECK(gtk_editable_get_text(GTK_EDITABLE(state.entries[index]))[0] == '\0');
     }
+    CHECK(gui_export_contents(&state, exported, export_error, sizeof(export_error)));
+    CHECK(strspn(exported, "0") == SUDOKU_CELL_COUNT);
 
     g_object_unref(application);
     return 0;

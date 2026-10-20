@@ -36,6 +36,9 @@ The default `make` target does not require GTK and continues to build the CLI.
 The GUI's **Import** button accepts puzzle files containing 81 digits, with
 `0` or `.` for empty cells; whitespace and line breaks are ignored. Imported
 puzzles are validated before they replace the current grid.
+The **Export** button saves the current grid as an 81-character puzzle string,
+using `0` for empty cells, so both unfinished and finished puzzles can be
+exported.
 
 ## Tests
 
@@ -54,7 +57,11 @@ pushes and pull requests.
 
 ## Project layout
 
-- `src/` — solver implementation, CLI entry point, and GTK GUI entry point
+- `src/` — solver implementation, CLI entry point, and GTK GUI modules
+- `src/gui_main.c` — GTK application entry point
+- `src/gui.c` — GUI window and widget construction
+- `src/gui_actions.c` — puzzle actions and import/export behavior
+- `src/gui.h` — private GUI module interface
 - `include/` — public solver API
 - `tests/` — unit and CLI tests
 - `examples/` — sample puzzle
