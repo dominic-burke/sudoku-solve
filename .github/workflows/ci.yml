@@ -9,5 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install GUI test dependencies
+        run: sudo apt-get update && sudo apt-get install --yes libgtk-4-dev pkg-config xvfb
       - name: Run automated tests
-        run: make test
+        run: make test gui-test
