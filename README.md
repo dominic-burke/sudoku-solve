@@ -61,7 +61,7 @@ pushes and pull requests.
 - `src/gui_main.c` — GTK application entry point
 - `src/gui.c` — GUI window and widget construction
 - `src/gui_actions.c` — puzzle actions and import/export behavior
-- `src/gui.h` — private GUI module interface
+- `include/gui.h` — private GUI module interface
 - `include/` — public solver API
 - `tests/` — unit and CLI tests
 - `examples/` — sample puzzle
